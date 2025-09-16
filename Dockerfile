@@ -1,27 +1,26 @@
-# Base image with PHP 8.2 and Apache
 FROM php:8.2-apache
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /var/www/html
 
-# Copy Composer files and install dependencies
+# Install required packages: git, zip, unzip, and other dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    zip \
+    unzip \
+    libzip-dev \
+    && docker-php-ext-install zip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy project files
 COPY composer.json composer.lock ./
+
+# Install Composer and dependencies
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
     && composer install --no-dev \
     && rm composer-setup.php
 
-# Copy the rest of your project
-COPY . .
-
-# Set Apache to serve 'public' folder
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-
-# Enable Apache rewrite module (optional, useful for clean URLs)
-RUN a2enmod rewrite
-
-# Expose default HTTP port (Render will map $PORT automatically)
-EXPOSE 10000
-
-# Start Apache in foreground
-CMD ["apache2-foreground"]
+# Copy the rest of the code
+COPY public/ ./public/
+COPY files/ ./files/
