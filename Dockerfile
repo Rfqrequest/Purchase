@@ -23,4 +23,4 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 
 # Copy the rest of the code
 COPY public/ ./public/
-COPY files/ ./files/
+RUN mkdir -p /var/www/html/files
