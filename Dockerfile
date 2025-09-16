@@ -12,15 +12,27 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install zip \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy project files
+# Copy composer files if you’re using PHP dependencies
 COPY composer.json composer.lock ./
-
-# Install Composer and dependencies
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
     && composer install --no-dev \
     && rm composer-setup.php
 
-# Copy the rest of the code
+# Copy backend PHP scripts (important!)
+COPY submit.php download.php ./
+
+# Copy files folder
+COPY files/ ./files/
+
+# Copy the frontend
 COPY public/ ./public/
-RUN mkdir -p /var/www/html/files
+
+# Change Apache document root to /public
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start Apache
+CMD ["apache2-foreground"]
